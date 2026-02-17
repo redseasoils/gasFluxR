@@ -210,7 +210,10 @@ find_gasmet_files <- function(
 read_gasmet_files <- function(paths = find_gasmet_files(), ...) {
   # Remove empty files before reading in
   read_paths <- remove_empty_files(paths)
-  gasmet_files <- suppressWarnings(lapply(read_paths, readLines))
+  gasmet_files <- suppressWarnings(lapply(seq_along(read_paths), \(x) {
+    cat(paste0("Gasmet file [", x, "] initial read:", read_paths[x], "\n"))
+    readLines(read_paths[x])
+  }))
   names(gasmet_files) <- read_paths
   return(gasmet_files)
 }
