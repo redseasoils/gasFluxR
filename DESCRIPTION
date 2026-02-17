@@ -1,0 +1,32 @@
+Package: MargLabGHG
+Type: Package
+Title: GHG Workflow for the Soils Lab at UIUC
+Version: 0.1.0
+Authors@R: c(
+    person(
+      "Ezra", "Moses",
+      email = "moses8@illinois.edu",
+      role = c("aut", "cre")
+    )
+  )
+Description: New and improved functions to process soil GHG emissions data from Gasmet analyzers and static chambers. 
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.3.3
+Imports: 
+    dplyr,
+    lubridate,
+    magrittr,
+    purrr,
+    readr,
+    readxl,
+    rlang,
+    stringr,
+    tidyr,
+    tidyselect,
+    xfun
+Roxygen: list(markdown = TRUE)
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
