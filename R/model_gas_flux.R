@@ -54,7 +54,7 @@
 #'
 #' 3. **Model fitting**:
 #'
-#'    - CO2: Linear model after deadband removal
+#'    - CO2: Linear model using deadband removal specifications
 #'    - N2O: Linear and quadratic models using CO2-determined deadband, selects
 #'           best by RMSE or R2
 #'    - Other: Linear model using CO2-determined deadband (if `co2_mod` is
@@ -62,8 +62,38 @@
 #'
 #' 4. **Quality assessment**: Checks against min_n and min_R2 criteria
 #'
-#' ## Deadband options for CO2 models Pass a `deadband_opts` list via `...`
-#' with structure:
+#' ## Deadband options for CO2 models
+#'
+#' A 'deadband' is a consecutive period of data in a chamber-based gas
+#' measurement before which the chamber reaches equilibrium. Removing the
+#' deadband is often desirable for greenhouse gas flux calculations, and is
+#' typically easiest to identify using CO2 flux data due to its consistent
+#' linear structure. Three methods of deadband removal for CO2 flux models are
+#' currently supported:
+#'
+#'  1. **fixed**: Removes points at the beginning of a measurement occurring
+#'                before a specified number of seconds.
+#'  2. **minima**: Removes points before a minimum occurring within a certain
+#'                 portion of number of seconds of measurement initiation. Good
+#'                 for measurements characterized by an initial decrease in flux
+#'                 followed by a linear increase.
+#'  3. **optimum**: Algorithmically removes endpoints as needed by constructing
+#'                  a linear model, comparing the R2 value to `min_R2`, and
+#'                  removing the endpoint with the largest magnitude residual if
+#'                  the R2 is inadequate. Endpoints are considered for removal
+#'                  at both the beginning and end of the measurement if the
+#'                  `trim_tails` option is set to `TRUE`, or only at the
+#'                  beginning of the measurement if `FALSE` (the default; see
+#'                  below). Endpoints will be removed so long as `min_R2` has
+#'                  not been reached and at least `min_n` points remain.
+#'                  Therefore, users should exercise caution in utilizing this
+#'                  method, as it often leads to a larger identified deadband
+#'                  than other methods, and thus less observations from which
+#'                  the resulting model (and models of other gases based on the
+#'                  CO2-identified deadband) are based.
+#'
+#' To apply deadband removal before finalizing the CO2 flux model, pass a
+#' `deadband_opts` list via `...` with structure:
 #'
 #' ```
 #' deadband_opts = list(
@@ -75,7 +105,18 @@
 #' )
 #' ```
 #'
-#' ## Model selection options for N2O Pass a `mod_opts` list via `...` with
+#' To model CO2 flux data without deadband removal, simply do not pass
+#' `deadband_opts`, or use `deadband_opts = list(method = "none")`.
+#'
+#' Note that `deadband_opts` is ignored for non-CO2 gases. If you'd like to
+#' override this, you can 'trick' the function by setting `gas_name = "CO2"`,
+#' while naming a different gas column in `gas_var`.
+#'
+#' ## Model selection options for N2O
+#'
+#' Linear and quadratic models are supported for N2O flux modeling, with model
+#' selection based on either R2 or RMSE. To specify models desired and which
+#' metric to use to choose a final model, pass a `mod_opts` list via `...` with
 #' structure:
 #'
 #' ```
@@ -84,6 +125,10 @@
 #'   selection_metric = c("RMSE", "R2")  # Metric for best model selection
 #' )
 #' ```
+#'
+#' **NOTE**: Currently, the `models` option is ignored, and both linear and
+#' quadratic models are always fit to N2O flux data. This will be corrected
+#' before v1.0 release.
 #'
 #' @seealso
 #' * [calculate_gas_flux()] for converting model slopes to flux rates
@@ -152,7 +197,8 @@ model_gas_flux <- function(
   # conditionally "ignore" min_n.
   validation <- validate_flux_mod_data(mod)
   if (!validation$valid) {
-    mod <- flux_mod_result(update = mod, success = FALSE, reason = validation$reason)
+    mod <- flux_mod_result(update = mod, success = FALSE,
+                           reason = validation$reason)
     return(mod)
   }
   # Execute modeling based on gas
@@ -172,6 +218,9 @@ deduce_gas_name <- function(data, ppm_var) {
                      Carbon.monoxide.CO = "CO",
                      Water.vapor.H2O = "H2O",
                      NA_character_)
-  if (is.na(gas_name)) stop("Gas name could not be deduced from ppm_var. Please specify 'gas_name'.")
+  if (is.na(gas_name)) {
+    stop(paste0("Gas name could not be deduced from ppm_var. Please specify ",
+                "'gas_name'."))
+  }
   return(gas_name)
 }

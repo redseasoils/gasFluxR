@@ -79,7 +79,7 @@ non-NA/non-zero values exist
 initial chamber warm up
 \item \strong{Model fitting}:
 \itemize{
-\item CO2: Linear model after deadband removal
+\item CO2: Linear model using deadband removal specifications
 \item N2O: Linear and quadratic models using CO2-determined deadband, selects
 best by RMSE or R2
 \item Other: Linear model using CO2-determined deadband (if \code{co2_mod} is
@@ -89,9 +89,39 @@ specified) or using all data (if \code{co2_mod} is \code{NULL})
 }
 }
 
-\subsection{Deadband options for CO2 models Pass a \code{deadband_opts} list via \code{...}}{
+\subsection{Deadband options for CO2 models}{
 
-with structure:
+A 'deadband' is a consecutive period of data in a chamber-based gas
+measurement before which the chamber reaches equilibrium. Removing the
+deadband is often desirable for greenhouse gas flux calculations, and is
+typically easiest to identify using CO2 flux data due to its consistent
+linear structure. Three methods of deadband removal for CO2 flux models are
+currently supported:
+\enumerate{
+\item \strong{fixed}: Removes points at the beginning of a measurement occurring
+before a specified number of seconds.
+\item \strong{minima}: Removes points before a minimum occurring within a certain
+portion of number of seconds of measurement initiation. Good
+for measurements characterized by an initial decrease in flux
+followed by a linear increase.
+\item \strong{optimum}: Algorithmically removes endpoints as needed by constructing
+a linear model, comparing the R2 value to \code{min_R2}, and
+removing the endpoint with the largest magnitude residual if
+the R2 is inadequate. Endpoints are considered for removal
+at both the beginning and end of the measurement if the
+\code{trim_tails} option is set to \code{TRUE}, or only at the
+beginning of the measurement if \code{FALSE} (the default; see
+below). Endpoints will be removed so long as \code{min_R2} has
+not been reached and at least \code{min_n} points remain.
+Therefore, users should exercise caution in utilizing this
+method, as it often leads to a larger identified deadband
+than other methods, and thus less observations from which
+the resulting model (and models of other gases based on the
+CO2-identified deadband) are based.
+}
+
+To apply deadband removal before finalizing the CO2 flux model, pass a
+\code{deadband_opts} list via \code{...} with structure:
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{deadband_opts = list(
   method = c("fixed", "minima", "optimum", "none"),
@@ -101,10 +131,20 @@ with structure:
   optimum = list(trim_tails = FALSE) # Iteratively remove points to maximize R2
 )
 }\if{html}{\out{</div>}}
+
+To model CO2 flux data without deadband removal, simply do not pass
+\code{deadband_opts}, or use \code{deadband_opts = list(method = "none")}.
+
+Note that \code{deadband_opts} is ignored for non-CO2 gases. If you'd like to
+override this, you can 'trick' the function by setting \code{gas_name = "CO2"},
+while naming a different gas column in \code{gas_var}.
 }
 
-\subsection{Model selection options for N2O Pass a \code{mod_opts} list via \code{...} with}{
+\subsection{Model selection options for N2O}{
 
+Linear and quadratic models are supported for N2O flux modeling, with model
+selection based on either R2 or RMSE. To specify models desired and which
+metric to use to choose a final model, pass a \code{mod_opts} list via \code{...} with
 structure:
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{mod_opts = list(
@@ -112,6 +152,10 @@ structure:
   selection_metric = c("RMSE", "R2")  # Metric for best model selection
 )
 }\if{html}{\out{</div>}}
+
+\strong{NOTE}: Currently, the \code{models} option is ignored, and both linear and
+quadratic models are always fit to N2O flux data. This will be corrected
+before v1.0 release.
 }
 }
 \examples{
