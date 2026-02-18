@@ -1,0 +1,13 @@
+Line	Date	Time	SpectrumFile	LibraryFile	Water vapor H2O	Unit	 Compensation	Carbon dioxide CO2	Unit	 Compensation	Carbon monoxide CO	Unit	 Compensation	Nitrous oxide N2O	Unit	 Compensation	Ammonia NH3	Unit	 Compensation	Methane CH4	Unit	 Compensation	Pressure	Unit	 Compensation	Cell temperature	Unit	 Compensation	 Status
+0	2024-10-08	10:35:44		GAS-APP-006_SN45516_c14_133_Rev1.CLIB	  1.03	vol-%	wet	419.51	ppm	wet	 0.000	ppm	wet	0.3822	ppm	wet	 0.000	ppm	wet	 2.086	ppm	wet	992.90	mbar	N/A	 39.23	C	N/A	OK
+0	2024-10-08	10:36:05		GAS-APP-006_SN45516_c14_133_Rev1.CLIB	  0.98	vol-%	wet	418.35	ppm	wet	 0.000	ppm	wet	0.3831	ppm	wet	 0.000	ppm	wet	 2.059	ppm	wet	992.90	mbar	N/A	 39.35	C	N/A	OK
+0	2024-10-08	10:36:26		GAS-APP-006_SN45516_c14_133_Rev1.CLIB	  1.03	vol-%	wet	418.02	ppm	wet	 0.000	ppm	wet	0.3813	ppm	wet	 0.000	ppm	wet	 2.064	ppm	wet	992.90	mbar	N/A	 39.43	C	N/A	OK
+0	2024-10-08	10:36:47		GAS-APP-006_SN45516_c14_133_Rev1.CLIB	  1.06	vol-%	wet	418.10	ppm	wet	 0.000	ppm	wet	0.3771	ppm	wet	 0.000	ppm	wet	 2.031	ppm	wet	993.00	mbar	N/A	 39.59	C	N/A	OK
+0	2024-10-08	10:37:08		GAS-APP-006_SN45516_c14_133_Rev1.CLIB	  1.06	vol-%	wet	417.62	ppm	wet	 0.000	ppm	wet	0.3895	ppm	wet	 0.000	ppm	wet	 2.080	ppm	wet	993.00	mbar	N/A	 39.67	C	N/A	OK
+0	2024-10-08	10:37:29		GAS-APP-006_SN45516_c14_133_Rev1.CLIB	  1.05	vol-%	wet	418.47	ppm	wet	 0.000	ppm	wet	0.3751	ppm	wet	 0.000	ppm	wet	 2.086	ppm	wet	993.00	mbar	N/A	 39.77	C	N/A	OK
+0	2024-10-08	10:37:50		GAS-APP-006_SN45516_c14_133_Rev1.CLIB	  1.06	vol-%	wet	418.11	ppm	wet	 0.000	ppm	wet	0.3775	ppm	wet	 0.000	ppm	wet	 2.069	ppm	wet	993.10	mbar	N/A	 39.86	C	N/A	OK
+0	2024-10-08	10:38:11		GAS-APP-006_SN45516_c14_133_Rev1.CLIB	  1.06	vol-%	wet	418.32	ppm	wet	 0.000	ppm	wet	0.3810	ppm	wet	 0.000	ppm	wet	 2.106	ppm	wet	993.00	mbar	N/A	 40.21	C	N/A	OK
+0	2024-10-08	10:38:31		GAS-APP-006_SN45516_c14_133_Rev1.CLIB	  1.07	vol-%	wet	418.16	ppm	wet	 0.000	ppm	wet	0.3901	ppm	wet	 0.000	ppm	wet	 2.092	ppm	wet	993.00	mbar	N/A	 40.45	C	N/A	OK
+0	2024-10-08	10:38:52		GAS-APP-006_SN45516_c14_133_Rev1.CLIB	  1.08	vol-%	wet	419.89	ppm	wet	 0.000	ppm	wet	0.3776	ppm	wet	 0.000	ppm	wet	 2.063	ppm	wet	993.10	mbar	N/A	 40.71	C	N/A	OK
+0	2024-10-08	10:39:13		GAS-APP-006_SN45516_c14_133_Rev1.CLIB	  1.11	vol-%	wet	419.86	ppm	wet	 0.000	ppm	wet	0.3761	ppm	wet	 0.000	ppm	wet	 2.044	ppm	wet	993.10	mbar	N/A	 40.97	C	N/A	OK
+0	2024-10-08	10:39:34		GAS-APP-006_SN45516_c14_133_Rev1.CLIB	  1.13	vol-%	wet	419.89	ppm	wet	 0.000	ppm	wet	0.3827	ppm	wet	 0.000	ppm	wet	 2.065	ppm	wet	993.00	mbar	N/A	 41.29	C	N/A	OK
