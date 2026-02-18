@@ -1,0 +1,110 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# MargLabGHG
+
+MargLabGHG provides a basic workflow processing data from Gasmet portable gas analyzers, including support for flux modeling and calculations.
+
+## Installation
+
+You can install the development version of MargLabGHG from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("pak")
+pak::pak("redseasoils/MargLabGHG")
+```
+
+## Quick Start
+
+To get started, you'll need:
+
+  1. A TXT file from a Gasmet portable gas analyzer
+  2. A spreadsheet (.xlsx) containing variable chamber dimensions and variables, including chamber temperature (°C), collar height (cm; if applicable), chamber height (cm), and input and output tube lengths (cm).
+  
+We recommend storing these files in a specific structure so that the package's functions can find many of these files easily and process them in batches. More on that below, but for now, let's focus on getting 
+
+```{r import-gasmet-file}
+library(MargLabGHG)
+# Use an example TXT file directory
+txt_file_dir <- system.file("data", "00_raw", "gas_concentration", "Site1", 
+                            "20240830", package = "MargLabGHG")
+# And a TXT file within that directory
+txt_file <- "301 BT.TXT"
+# Import
+gasmet_data <- import_gasmet_data(txt_file_dir, txt_file)
+head(gasmet_data)
+
+# Use an example chamber variables spreadsheet
+chamber_dir <- system.file("data", "00_raw", "chamber_volume", "Site1", 
+                           package = "MargLabGHG")
+chamber_file <- "20240830.xlsx"
+chamber <- import_chamber_volume(chamber_dir, chamber_file)
+```
+
+## File Storage for Batch Processing
+
+Files must be structured in a standard format to batch process Gasmet data. File structure must meet the following conditions:
+
+  1. All Gasmet TXT files must be stored in a directory in which there are no other TXT files. The files *can* be stored in subdirectories, but there must be one main directory below which the only TXT files are Gasmet files.
+  2. Similarly, all spreadsheets containing chamber variables must be stored in a directory which contains no other .xlsx files (this can be the same as the TXT file directory). These files may also be stored in subdirectories. 
+  
+Below is an example file structure:
+```bash
+└── Data
+   └── GHG
+       └── Gasmet
+           └── raw
+           │   ├── Site_A
+           │   │   ├── 20240701
+           │   │   │   ├── 1101.TXT
+           │   │   │   ├── 1102.TXT
+           │   │   │   ├── 1201.TXT
+           │   │   │   ├── 1202.TXT
+           │   │   │   └── Chamber.xlsx
+           │   │   ├── 20240708
+           │   │   │   ├── 1101.TXT
+           │   │   │   ├── 1102.TXT
+           │   │   │   ├── 1201.TXT
+           │   │   │   ├── 1202.TXT
+           │   │   │   └── Chamber.xlsx
+           │   └── Site_B
+           │   │   ├── 20240702
+           │   │   │   ├── 2101.TXT
+           │   │   │   ├── 2102.TXT
+           │   │   │   ├── 2201.TXT
+           │   │   │   ├── 2202.TXT
+           │   │   │   └── Chamber.xlsx
+           │   │   ├── 20240709
+           │   │   │   ├── 2101.TXT
+           │   │   │   ├── 2102.TXT
+           │   │   │   ├── 2201.TXT
+           │   │   │   ├── 2202.TXT
+           │   │   │   └── Chamber.xlsx
+```
+
+With the file structure above, assuming the working directory is the root directory containing the "Data" folder, the import functions would be:
+
+``` {r eval=FALSE}
+# Set option for TXT file directory, then import
+options("gaseous.gasemt_TXT_dir" = "Data/GHG/Gasmet/raw")
+import_gasmet_data()
+
+# OR specify the path in the import function, without option setting
+import_gasmet_data("Data/GHG/Gasmet/raw")
+
+# Chamber measurements
+import_chamber_volume("Data/GHG/Gasmet/raw")
+```
+
