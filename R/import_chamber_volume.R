@@ -1,26 +1,29 @@
 #' Import Chamber Volume Data
 #'
 #' @description Imports and cleans up chamber volume Excel spreadsheets
-#' contained in `path`.
+#' contained in `dir`.
 #'
-#' @param path File path in which to look for chamber volume files. Defaults to
+#' @param dir Directory in which to look for chamber volume files. Defaults to
 #'   `"data/00_raw/chamber_volume"`.
 #'
 #' @return A data frame of all chamber volume data.
 #' @export
 #'
-import_chamber_volume <- function(path = 'data/00_raw/chamber_volume') {
+import_chamber_volume <- function(dir = 'data/00_raw/chamber_volume', file = NULL) {
 
-  cat("\n\nLooking for files in ", getwd(), "/", path, "\n\n", sep = "")
-
-  # Find files to import
-  vol_files <- list.files(
-    path = path,
-    recursive = T,
-    pattern = "\\.xlsx",
-    ignore.case = T,
-    full.names = T
-  )
+  if (is.null(file)) {
+    cat("\n\nLooking for files in ", getwd(), "/", dir, "\n\n", sep = "")
+    # Find files to import
+    vol_files <- list.files(
+      path = dir,
+      recursive = T,
+      pattern = "\\.xlsx",
+      ignore.case = T,
+      full.names = T
+    )
+  } else {
+    vol_files <- file.path(dir, file)
+  }
 
   # Check sheet names
   check_sheets <- function(vol_files, n = 1) {
@@ -28,7 +31,7 @@ import_chamber_volume <- function(path = 'data/00_raw/chamber_volume') {
     if (length(sheets) > 1 & !"Chamber Volume" %in% sheets) {
       stop(paste("'Chamber Volume' sheet not found in", vol_files[n]))
     }
-    if (!n < length(vol_files)) check_sheets(n + 1)
+    if (n < length(vol_files)) check_sheets(vol_files, n + 1)
   }
   check_sheets(vol_files)
 
@@ -114,14 +117,14 @@ import_chamber_volume <- function(path = 'data/00_raw/chamber_volume') {
   vol_dat <- cleanup_chamber_volume(vol_dat)
 
   # Create one large data frame from smaller data frames in vol list
-  vol <- dplyr::bind_rows(vol_dat, .id = "path") %>%
+  vol <- dplyr::bind_rows(vol_dat, .id = "dir") %>%
     # Add columns for date and site and change class of plot column to factor
     dplyr::mutate(
-      Date = as.Date(stringr::str_sub(path, -13, -6), "%Y%m%d"),
-      site = stringr::str_split_i(path, "/", -2) %>% factor(),
+      Date = as.Date(stringr::str_sub(dir, -13, -6), "%Y%m%d"),
+      site = stringr::str_split_i(dir, "/", -2) %>% factor(),
       plot = factor(plot), .before = "plot"
     ) %>%
-    dplyr::select(-path) %>%
+    dplyr::select(-dir) %>%
     dplyr::distinct()
 
   # Make sure each date/site/plot has only one unique entry of volume data

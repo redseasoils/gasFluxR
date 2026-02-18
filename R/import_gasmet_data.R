@@ -2,9 +2,11 @@
 #'
 #' Import and perform preliminary checks and validations on Gasmet TXT data.
 #'
-#' @param dir Directory to search for TXT files. By default, search
-#'   path is "data/00_raw/gas_concentration". This value can be set globally
-#'   using the option "gaseous.gasmet_txt_dir".
+#' @param dir Directory to search for TXT files. By default, search path is
+#'   "data/00_raw/gas_concentration". This value can be set globally using the
+#'   option "gaseous.gasmet_txt_dir".
+#' @param file Specific file name of a TXT file to import, within `dir`. If
+#'   `NULL` (the default) all TXT files in `dir` will be imported.
 #' @param recursive Logical. Should `dir` be searched recursively? Defaults to
 #'   `TRUE`.
 #' @param rm_open_files Logical. Should open files be removed from the list?
@@ -47,9 +49,9 @@
 #'   test results.
 #' @importFrom readr read_tsv cols col_date col_time col_double col_guess
 #' @export
-#' @md
 import_gasmet_data <- function(
     dir = getOption("gaseous.gasmet_txt_dir"),
+    file = NULL,
     recursive = TRUE,
     rm_open_files = TRUE,
     col_types = NULL,
@@ -66,9 +68,16 @@ import_gasmet_data <- function(
     ...
 ) {
 
-  gasmet_files <- find_gasmet_files(dir, recursive, rm_open_files)
+  if (is.null(file)) {
+    gasmet_files <- find_gasmet_files(dir, recursive, rm_open_files)
+  } else {
+    gasmet_files <- file.path(dir, file)
+  }
   gasmet_files <- read_gasmet_files(gasmet_files)
   gasmet_files <- remove_repeated_headers(gasmet_files)
+  gasmet_files <- fix_anomalous_header(gasmet_files)
+  gasmet_files <- add_missing_headers(gasmet_files)
+  gasmet_files <- correct_tabs(gasmet_files)
 
   if (is.null(col_types)) {
     col_types <- readr::cols(
@@ -160,10 +169,16 @@ add_seconds_col <- function(data, time_col = "Time") {
 #' @md
 convert_dates_and_times <- function(data, date_col = NULL, date_formats,
                                     time_col = NULL, time_formats) {
-  if (!is.null(date_col) && date_col %in% names(data))
-    data[[date_col]] <- lubridate::as_date(data[[date_col]], format = date_formats)
-  if (!is.null(time_col) && time_col %in% names(data))
-    data[[time_col]] <- readr::parse_time(data[[time_col]], format = time_formats)
+  if (!is.null(date_col) && date_col %in% names(data)) {
+    data[[date_col]] <- lubridate::as_date(
+      stringr::str_remove_all(data[[date_col]], "\\s"),
+      format = date_formats)
+  }
+  if (!is.null(time_col) && time_col %in% names(data)) {
+    data[[time_col]] <- readr::parse_time(
+      stringr::str_remove_all(data[[time_col]], "\\s"),
+      format = time_formats)
+  }
   return(data)
 }
 
@@ -250,6 +265,70 @@ remove_repeated_headers <- function(gasmet_files, ...) {
     if (length(extra_headers) > 0) return(x[-extra_headers])
     return(x)
   })
+}
+
+#' Fix anomalous header rows
+#'
+#' Replace headers for Gasmet files in the case of a common anomalous file issue
+#' in which "Line" (the first header) is on the same line as the rest of the
+#' first row's values, beginning with the Date (column 2).
+#' @noRd
+fix_anomalous_header <- function(gasmet_files, ...) {
+  lapply(gasmet_files, \(x) {
+    header_is_anomalous <- stringr::str_detect(x[1], "^Line[:space:]+\\d{4}")
+    if (header_is_anomalous) {
+      # Replace 'Line' header in first row with 0
+      x[1] <- stringr::str_replace(x[1], "^Line[:space:]+", "0\\\t")
+      # Add header row
+      headers <- paste(gasmet_file_headers(), collapse = "\t")
+      x <- c(headers, x)
+    }
+    return(x)
+  })
+}
+
+#' Add headers when they are missing
+#' @noRd
+add_missing_headers <- function(gasmet_files, ...) {
+  lapply(gasmet_files, \(x) {
+    header_missing <- stringr::str_detect(x[1], "^0")
+    if (header_missing) {
+      headers <- paste(gasmet_file_headers(), collapse = "\t")
+      x <- c(headers, x)
+    }
+    return(x)
+  })
+}
+
+#' Replace multi-space sequences with tabs for read_tsv
+#' @noRd
+correct_tabs <- function(gasmet_files, ...) {
+  lapply(gasmet_files, \(x) {
+    x <- stringr::str_replace_all(x, " {3,10}", "\t")
+    return(x)
+  })
+}
+
+#' Helper function to get Gasmet file headers
+#' @noRd
+gasmet_file_headers <- function(make_file = FALSE) {
+  headers <- c(
+    "Line", "Date", "Time", "SpectrumFile", "LibraryFile", "Water vapor H2O",
+    "Unit", "Compensation", "Residual", "Carbon dioxide CO2", "Unit",
+    "Compensation", "Residual", "Carbon monoxide CO", "Unit", "Compensation",
+    "Residual", "Nitrous oxide N2O", "Unit", "Compensation", "Residual",
+    "Ammonia NH3", "Unit", "Compensation", "Residual", "Methane CH4", "Unit",
+    "Compensation", "Residual", "Pressure", "Unit", "Compensation", "Residual",
+    "Cell temperature", "Unit", "Compensation", "Residual",
+    "Electronics temperature", "Unit", "Compensation", "Residual", "Status"
+  )
+  if (!make_file) return(headers)
+  file <- tempfile(fileext = ".txt")
+  on.exit(unlink(file))
+  header <- paste(headers, collapse = "\t")
+  writeLines(header, file)
+  file.edit(file)
+  return(NULL)
 }
 
 #' Check column existence in Gasmet TXT files

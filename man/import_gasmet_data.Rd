@@ -6,6 +6,7 @@
 \usage{
 import_gasmet_data(
   dir = getOption("gaseous.gasmet_txt_dir"),
+  file = NULL,
   recursive = TRUE,
   rm_open_files = TRUE,
   col_types = NULL,
@@ -23,9 +24,12 @@ import_gasmet_data(
 )
 }
 \arguments{
-\item{dir}{Directory to search for TXT files. By default, search
-path is "data/00_raw/gas_concentration". This value can be set globally
-using the option "gaseous.gasmet_txt_dir".}
+\item{dir}{Directory to search for TXT files. By default, search path is
+"data/00_raw/gas_concentration". This value can be set globally using the
+option "gaseous.gasmet_txt_dir".}
+
+\item{file}{Specific file name of a TXT file to import, within \code{dir}. If
+\code{NULL} (the default) all TXT files in \code{dir} will be imported.}
 
 \item{recursive}{Logical. Should \code{dir} be searched recursively? Defaults to
 \code{TRUE}.}

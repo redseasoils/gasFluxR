@@ -4,10 +4,10 @@
 \alias{import_chamber_volume}
 \title{Import Chamber Volume Data}
 \usage{
-import_chamber_volume(path = "data/00_raw/chamber_volume")
+import_chamber_volume(dir = "data/00_raw/chamber_volume", file = NULL)
 }
 \arguments{
-\item{path}{File path in which to look for chamber volume files. Defaults to
+\item{dir}{Directory in which to look for chamber volume files. Defaults to
 \code{"data/00_raw/chamber_volume"}.}
 }
 \value{
@@ -15,5 +15,5 @@ A data frame of all chamber volume data.
 }
 \description{
 Imports and cleans up chamber volume Excel spreadsheets
-contained in \code{path}.
+contained in \code{dir}.
 }
