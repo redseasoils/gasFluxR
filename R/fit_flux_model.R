@@ -9,6 +9,12 @@ fit_flux_model.flux_mod <- function(flux_mod, co2_mod = NULL, ...) {
   if (is.null(co2_mod)) {
     result$ppm_processed <- result$ppm_raw
     result$seconds_processed <- result$seconds_raw
+
+  # If CO2 model specified but processed data is NULL, fail and return
+  } else if (is.null(co2_mod$ppm_processed)) {
+    return(flux_mod_result(update = result, success = FALSE, reason = "Invalid CO2 data"))
+
+  # Otherwise use CO2 processed data
   } else {
     result$seconds_processed <- co2_mod$seconds_processed
     result$ppm_processed <- with(result, ppm_raw[seconds_raw %in% seconds_processed])
