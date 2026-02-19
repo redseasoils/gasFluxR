@@ -145,13 +145,13 @@ apply_optimum_deadband_method <- function(flux_mod, deadband_opts) {
     metrics <- get_model_metrics(model)
 
     # Keep track of the best model we've seen
-    if (is.null(best_model) || metrics$r_squared > best_metrics$r_squared) {
+    if (is.null(best_model) || isTRUE(metrics$r_squared > best_metrics$r_squared)) {
       best_model <- model
       best_metrics <- metrics
       best_df <- current_df
     }
 
-    if (metrics$r_squared >= result$min_R2) result$success <- TRUE
+    if (isTRUE(metrics$r_squared >= result$min_R2)) result$success <- TRUE
 
     # Remove point for next iteration
     if (trim_tails) {
@@ -216,7 +216,7 @@ update_success_min_n <- function(flux_mod) {
 # checking the R2 value against min_R2
 #' @noRd
 update_success_r2 <- function(flux_mod, metrics) {
-  r2_fail <- metrics$r_squared < flux_mod$min_R2
+  r2_fail <- is.na(metrics$r_squared) || isTRUE(metrics$r_squared < flux_mod$min_R2)
   if (r2_fail) {
     success <- FALSE
     reason <- paste0("R² (", round(metrics$r_squared, 3), ") < ", flux_mod$min_R2)
