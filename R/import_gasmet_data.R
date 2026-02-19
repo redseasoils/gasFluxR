@@ -78,6 +78,7 @@ import_gasmet_data <- function(
   gasmet_files <- fix_anomalous_header(gasmet_files)
   gasmet_files <- add_missing_headers(gasmet_files)
   gasmet_files <- correct_tabs(gasmet_files)
+  gasmet_files <- remove_incomplete_final_lines(gasmet_files)
 
   if (is.null(col_types)) {
     col_types <- readr::cols(
@@ -252,6 +253,22 @@ remove_empty_files <- function(paths, ...) {
   return(paths)
 }
 
+#' Remove incomplete final lines in Gasmet TXT files
+#' @param gasmet_files A list of Gasmet TXT data read using [read_gasmet_files].
+#' @param ... Ignored.
+#' @returns A list
+#' @noRd
+remove_incomplete_final_lines <- function(gasmet_files, ...) {
+  # Detect incomplete final lines as those having 0-2 tab separators instead of
+  # the typical 30-some
+  lapply(gasmet_files, \(x) {
+    len <- length(x)
+    n_sep <- stringr::str_count(x[len], "\\t")
+    if (n_sep < 3) x <- x[-len]
+    return(x)
+  })
+}
+
 
 #' Remove repeated header rows from Gasmet TXT data
 #'
@@ -272,6 +289,11 @@ remove_repeated_headers <- function(gasmet_files, ...) {
 #' Replace headers for Gasmet files in the case of a common anomalous file issue
 #' in which "Line" (the first header) is on the same line as the rest of the
 #' first row's values, beginning with the Date (column 2).
+#'
+#' @param gasmet_files A list of Gasmet TXT data read using [read_gasmet_files].
+#' @param ... Ignored.
+#' @returns A list
+#'
 #' @noRd
 fix_anomalous_header <- function(gasmet_files, ...) {
   lapply(gasmet_files, \(x) {
@@ -288,6 +310,9 @@ fix_anomalous_header <- function(gasmet_files, ...) {
 }
 
 #' Add headers when they are missing
+#' @param gasmet_files A list of Gasmet TXT data read using [read_gasmet_files].
+#' @param ... Ignored.
+#' @returns A list
 #' @noRd
 add_missing_headers <- function(gasmet_files, ...) {
   lapply(gasmet_files, \(x) {
@@ -301,6 +326,9 @@ add_missing_headers <- function(gasmet_files, ...) {
 }
 
 #' Replace multi-space sequences with tabs for read_tsv
+#' @param gasmet_files A list of Gasmet TXT data read using [read_gasmet_files].
+#' @param ... Ignored.
+#' @returns A list
 #' @noRd
 correct_tabs <- function(gasmet_files, ...) {
   lapply(gasmet_files, \(x) {
@@ -310,6 +338,9 @@ correct_tabs <- function(gasmet_files, ...) {
 }
 
 #' Helper function to get Gasmet file headers
+#' @param make_file Logical. If `FALSE` (default), returns a character of
+#'   headers, otherwise writes headers into a file Gasmet-TXT style and opens
+#'   the file in RStudio for easy copy-pasting.
 #' @noRd
 gasmet_file_headers <- function(make_file = FALSE) {
   headers <- c(
@@ -324,7 +355,6 @@ gasmet_file_headers <- function(make_file = FALSE) {
   )
   if (!make_file) return(headers)
   file <- tempfile(fileext = ".txt")
-  on.exit(unlink(file))
   header <- paste(headers, collapse = "\t")
   writeLines(header, file)
   file.edit(file)
