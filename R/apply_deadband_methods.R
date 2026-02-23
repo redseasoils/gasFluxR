@@ -17,14 +17,14 @@ apply_fixed_deadband_method <- function(flux_mod, deadband_opts) {
   result$seconds_processed <- result$seconds_raw[keep_idx]
 
   # Check if n obs >= min_n after deadband removal
-  result <- update_success_min_n(result)
+  result <- fail_if_obs_lt_min_n(result)
 
   # Fit model
   model <- fit_linear_model(result)
   metrics <- get_model_metrics(model)
 
   # Check R2 against min_R2
-  result <- update_success_r2(result, metrics)
+  result <- fail_if_low_r2(result, metrics)
 
   # Compile info for result
   success <- if (is.null(result$success)) TRUE else result$success
@@ -89,14 +89,14 @@ apply_minima_deadband_method <- function(flux_mod, deadband_opts) {
   result$seconds_processed <- result$seconds_raw[min_idx:length(result$seconds_raw)]
 
   # Check processed data vs min_n
-  result <- update_success_min_n(result)
+  result <- fail_if_obs_lt_min_n(result)
 
   # Fit model
   model <- fit_linear_model(result)
   metrics <- get_model_metrics(model)
 
   # Check R2 against min_R2
-  result <- update_success_r2(result, metrics)
+  result <- fail_if_low_r2(result, metrics)
 
   # Compile info for result
   success <- if (is.null(result$success)) TRUE else result$success
@@ -197,7 +197,7 @@ apply_optimum_deadband_method <- function(flux_mod, deadband_opts) {
 # Update success and reason entries for flux_mod after deadband removal,
 # checking the number of remaining observations against min_n
 #' @noRd
-update_success_min_n <- function(flux_mod) {
+fail_if_obs_lt_min_n <- function(flux_mod) {
   min_n_fail <- length(flux_mod$ppm_processed) < flux_mod$min_n
   if (min_n_fail) {
     success <- FALSE
@@ -215,7 +215,7 @@ update_success_min_n <- function(flux_mod) {
 # Update success and reason entries for flux_mod after modeling,
 # checking the R2 value against min_R2
 #' @noRd
-update_success_r2 <- function(flux_mod, metrics) {
+fail_if_low_r2 <- function(flux_mod, metrics) {
   r2_fail <- is.na(metrics$r_squared) || isTRUE(metrics$r_squared < flux_mod$min_R2)
   if (r2_fail) {
     success <- FALSE
@@ -226,4 +226,15 @@ update_success_r2 <- function(flux_mod, metrics) {
   } else {
     return(flux_mod)
   }
+}
+
+#' Change success to FALSE and add reason if corresponding CO2 model was not
+#' successful
+#' @noRd
+fail_if_co2_failed <- function(flux_mod, co2_mod = NULL) {
+  if (isFALSE(co2_mod$success)) {
+    flux_mod$success <- FALSE
+    flux_mod$reason <- "CO2 model failed"
+  }
+  return(flux_mod)
 }

@@ -19,10 +19,11 @@ fit_flux_model.flux_mod <- function(flux_mod, co2_mod = NULL, ...) {
     result$seconds_processed <- co2_mod$seconds_processed
     result$ppm_processed <- with(result, ppm_raw[seconds_raw %in% seconds_processed])
   }
-  result <- update_success_min_n(result)
+  result <- fail_if_co2_failed(result, co2_mod)
+  result <- fail_if_obs_lt_min_n(result)
   model <- fit_linear_model(result)
   metrics <- get_model_metrics(model)
-  result <- update_success_r2(result, metrics)
+  result <- fail_if_low_r2(result, metrics)
   result$success <- if (is.null(result$success)) TRUE else result$success
   if (isTRUE(result$success) || result$force) {
     result <- flux_mod_result(
@@ -103,7 +104,7 @@ fit_flux_model.flux_mod.N2O <- function(
   selected_metrics <- metrics[[selection]]
 
   # Check R2 value against min R2
-  result <- update_success_r2(result, selected_metrics)
+  result <- fail_if_low_r2(result, selected_metrics)
 
   # Make result
   success <- if (is.null(result$success)) TRUE else result$success
