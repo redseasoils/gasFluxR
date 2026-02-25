@@ -4,11 +4,25 @@
 \alias{import_chamber_volume}
 \title{Import Chamber Volume Data}
 \usage{
-import_chamber_volume(dir = "data/00_raw/chamber_volume", file = NULL)
+import_chamber_volume(
+  dir = "data/00_raw/chamber_volume",
+  file = NULL,
+  file_date_formats = c("\%Y\%m\%d")
+)
 }
 \arguments{
 \item{dir}{Directory in which to look for chamber volume files. Defaults to
 \code{"data/00_raw/chamber_volume"}.}
+
+\item{file}{Specific file in \code{dir} to import. If \code{NULL} (the default), all
+\code{.xlsx} files in \code{dir} will be imported.}
+
+\item{file_date_formats}{Character vector of formats of dates to parse from
+\code{xlsx} file names within \code{dir}. The default is \verb{\%Y\%m\%d}, which would have a
+path like \verb{[dir]/20250425.xlsx}, with the date parsed as \code{2025-04-25}. If
+more than one format is specified, parsing will be attempted in the order
+provided. For more information on date parsing abbreviations, see
+?\link{strptime}.}
 }
 \value{
 A data frame of all chamber volume data.

@@ -2,7 +2,7 @@ fit_flux_model <- function(flux_mod, co2_mod = NULL, ...) {
   UseMethod("fit_flux_model")
 }
 
-#' @exportS3Method MargLabGHG::fit_flux_model flux_mod
+#' @exportS3Method gasFluxR::fit_flux_model flux_mod
 fit_flux_model.flux_mod <- function(flux_mod, co2_mod = NULL, ...) {
   result <- flux_mod
   # If CO2 model not specified, use all data
@@ -34,7 +34,7 @@ fit_flux_model.flux_mod <- function(flux_mod, co2_mod = NULL, ...) {
   return(result)
 }
 
-#' @exportS3Method MargLabGHG::fit_flux_model flux_mod.CO2
+#' @exportS3Method gasFluxR::fit_flux_model flux_mod.CO2
 fit_flux_model.flux_mod.CO2 <- function(
     flux_mod,
     ...
@@ -56,7 +56,7 @@ fit_flux_model.flux_mod.CO2 <- function(
   return(result)
 }
 
-#' @exportS3Method MargLabGHG::fit_flux_model flux_mod.N2O
+#' @exportS3Method gasFluxR::fit_flux_model flux_mod.N2O
 fit_flux_model.flux_mod.N2O <- function(
     flux_mod, co2_mod = NULL,
     mod_opts = list(models = c("linear", "quadratic"),

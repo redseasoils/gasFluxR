@@ -1,6 +1,6 @@
-Package: MargLabGHG
+Package: gasFluxR
 Type: Package
-Title: GHG Workflow for the Soils Lab at UIUC
+Title: Greenhouse Gas Data Wrangling and Flux Modeling for Gasmet Portable Analyzers
 Version: 0.1.0
 Authors@R: c(
     person(
@@ -9,7 +9,7 @@ Authors@R: c(
       role = c("aut", "cre")
     )
   )
-Description: New and improved functions to process soil GHG emissions data from Gasmet analyzers and static chambers. 
+Description: Functions to support data import and processing for soil GHG emissions measured by Gasmet analyzers and static chambers. 
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

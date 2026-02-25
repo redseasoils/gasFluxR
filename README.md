@@ -1,25 +1,25 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# MargLabGHG
+# gasFluxR
 
-MargLabGHG provides a basic workflow processing data from Gasmet
-portable gas analyzers, including support for flux modeling and
-calculations.
+gasFluxR provides a basic workflow processing data from Gasmet portable
+gas analyzers, including support for flux modeling and calculations.
 
 ## Installation
 
-You can install the development version of MargLabGHG from
+You can install the development version of gasFluxR from
 [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("pak")
-pak::pak("redseasoils/MargLabGHG")
+pak::pak("redseasoils/gasFluxR")
 ```
 
-## Quick Start
+## Getting Started
 
-To get started, you’ll need:
+To calculate gas flux from Gasmet data using the package’s functions,
+you’ll need:
 
 1.  A TXT file from a Gasmet portable gas analyzer
 2.  A spreadsheet (.xlsx) containing variable chamber dimensions and
@@ -32,15 +32,15 @@ package’s functions can find many of these files easily and process them
 in batches. More on that below, but for now, let’s focus on getting
 
 ``` r
-library(MargLabGHG)
+library(gasFluxR)
 # Use an example TXT file directory
 txt_file_dir <- system.file("data", "00_raw", "gas_concentration", "Site1", 
-                            "20240830", package = "MargLabGHG")
+                            "20240830", package = "gasFluxR")
 # And a TXT file within that directory
 txt_file <- "301 BT.TXT"
 # Import
 gasmet_data <- import_gasmet_data(txt_file_dir, txt_file)
-#> Gasmet file [1] initial read:/private/var/folders/_k/y2yrfbfd45z_kw70m8r5dtxm0000gn/T/RtmpioMTqq/temp_libpath35a54a649631/MargLabGHG/data/00_raw/gas_concentration/Site1/20240830/301 BT.TXT
+#> Gasmet file [1] initial read:/Users/ezramoses/Library/Caches/org.R-project.R/R/renv/library/gasFluxR-d5e7aa2e/macos/R-4.5/aarch64-apple-darwin20/gasFluxR/data/00_raw/gas_concentration/Site1/20240830/301 BT.TXT
 #> Using default column specification to read Gasmet TXT files:
 #> cols_only(
 #>   Date = col_character(),
@@ -53,7 +53,7 @@ gasmet_data <- import_gasmet_data(txt_file_dir, txt_file)
 #>   Water.vapor.H2O = col_double()
 #> )
 #> 
-#> Reading Gasmet file 1: /private/var/folders/_k/y2yrfbfd45z_kw70m8r5dtxm0000gn/T/RtmpioMTqq/temp_libpath35a54a649631/MargLabGHG/data/00_raw/gas_concentration/Site1/20240830/301 BT.TXT 
+#> Reading Gasmet file 1: /Users/ezramoses/Library/Caches/org.R-project.R/R/renv/library/gasFluxR-d5e7aa2e/macos/R-4.5/aarch64-apple-darwin20/gasFluxR/data/00_raw/gas_concentration/Site1/20240830/301 BT.TXT 
 #> Checking Gasmet data for columns:
 #> 
 #>  Date
@@ -68,18 +68,18 @@ head(gasmet_data)
 #> # A tibble: 6 × 11
 #>   path              file  Date       Time     Water.vapor.H2O Carbon.dioxide.CO2
 #>   <chr>             <chr> <date>     <time>             <dbl>              <dbl>
-#> 1 /private/var/fol… 301 … 2024-08-30 09:31:32            3                  605.
-#> 2 /private/var/fol… 301 … 2024-08-30 09:31:53            2.98               525.
-#> 3 /private/var/fol… 301 … 2024-08-30 09:32:13            3.03               519.
-#> 4 /private/var/fol… 301 … 2024-08-30 09:32:34            3.07               529.
-#> 5 /private/var/fol… 301 … 2024-08-30 09:32:55            3.1                540 
-#> 6 /private/var/fol… 301 … 2024-08-30 09:33:16            3.13               552.
+#> 1 /Users/ezramoses… 301 … 2024-08-30 09:31:32            3                  605.
+#> 2 /Users/ezramoses… 301 … 2024-08-30 09:31:53            2.98               525.
+#> 3 /Users/ezramoses… 301 … 2024-08-30 09:32:13            3.03               519.
+#> 4 /Users/ezramoses… 301 … 2024-08-30 09:32:34            3.07               529.
+#> 5 /Users/ezramoses… 301 … 2024-08-30 09:32:55            3.1                540 
+#> 6 /Users/ezramoses… 301 … 2024-08-30 09:33:16            3.13               552.
 #> # ℹ 5 more variables: Carbon.monoxide.CO <dbl>, Nitrous.oxide.N2O <dbl>,
 #> #   Ammonia.NH3 <dbl>, Methane.CH4 <dbl>, seconds <int>
 
 # Use an example chamber variables spreadsheet
 chamber_dir <- system.file("data", "00_raw", "chamber_volume", "Site1", 
-                           package = "MargLabGHG")
+                           package = "gasFluxR")
 chamber_file <- "20240830.xlsx"
 chamber <- import_chamber_volume(chamber_dir, chamber_file)
 ```
@@ -98,39 +98,38 @@ data. File structure must meet the following conditions:
     be the same as the TXT file directory). These files may also be
     stored in subdirectories.
 
-Below is an example file structure:
+Below is an example file structure, in which “Gasmet_Data/raw” is the
+main directory for both Gasmet TXT files and spreadsheets:
 
 ``` bash
-└── Data
-   └── GHG
-       └── Gasmet
-           └── raw
-           │   ├── Site_A
-           │   │   ├── 20240701
-           │   │   │   ├── 1101.TXT
-           │   │   │   ├── 1102.TXT
-           │   │   │   ├── 1201.TXT
-           │   │   │   ├── 1202.TXT
-           │   │   │   └── Chamber.xlsx
-           │   │   ├── 20240708
-           │   │   │   ├── 1101.TXT
-           │   │   │   ├── 1102.TXT
-           │   │   │   ├── 1201.TXT
-           │   │   │   ├── 1202.TXT
-           │   │   │   └── Chamber.xlsx
-           │   └── Site_B
-           │   │   ├── 20240702
-           │   │   │   ├── 2101.TXT
-           │   │   │   ├── 2102.TXT
-           │   │   │   ├── 2201.TXT
-           │   │   │   ├── 2202.TXT
-           │   │   │   └── Chamber.xlsx
-           │   │   ├── 20240709
-           │   │   │   ├── 2101.TXT
-           │   │   │   ├── 2102.TXT
-           │   │   │   ├── 2201.TXT
-           │   │   │   ├── 2202.TXT
-           │   │   │   └── Chamber.xlsx
+└──Gasmet_Data
+│   └── raw
+│   │   ├── Site_A
+│   │   │   ├── 20240701
+│   │   │   │   ├── 1101.TXT
+│   │   │   │   ├── 1102.TXT
+│   │   │   │   ├── 1201.TXT
+│   │   │   │   ├── 1202.TXT
+│   │   │   │   └── Chamber.xlsx
+│   │   │   ├── 20240708
+│   │   │   │   ├── 1101.TXT
+│   │   │   │   ├── 1102.TXT
+│   │   │   │   ├── 1201.TXT
+│   │   │   │   ├── 1202.TXT
+│   │   │   │   └── Chamber.xlsx
+│   │   └── Site_B
+│   │   │   ├── 20240702
+│   │   │   │   ├── 2101.TXT
+│   │   │   │   ├── 2102.TXT
+│   │   │   │   ├── 2201.TXT
+│   │   │   │   ├── 2202.TXT
+│   │   │   │   └── Chamber.xlsx
+│   │   │   ├── 20240709
+│   │   │   │   ├── 2101.TXT
+│   │   │   │   ├── 2102.TXT
+│   │   │   │   ├── 2201.TXT
+│   │   │   │   ├── 2202.TXT
+│   │   │   │   └── Chamber.xlsx
 ```
 
 With the file structure above, assuming the working directory is the
@@ -148,3 +147,28 @@ import_gasmet_data("Data/GHG/Gasmet/raw")
 # Chamber measurements
 import_chamber_volume("Data/GHG/Gasmet/raw")
 ```
+
+## Flux Modeling Procedures
+
+The function `model_gas_flux()` detects the gas species via the column
+name in the `ppm_var` argument (or using `gas_name` directly, if
+specified). The data are dispatched to modeling procedures based on
+species:
+
+- **CO<sub>2</sub>**: Linear model with four options for deadband
+  (i.e. initial chamber disturbance) removal:
+  1.  None: All data are modeled
+  2.  Fixed: Remove inital observations up to a certain number of
+      seconds into the measurement (typically 30)
+  3.  Minima: Remove initial observations up to a local minima
+  4.  Optimum: Remove initial observations until an R<sup>2</sup>
+      threshold is achieved (success) or too few observations remain
+      (failure).
+- **N<sub>2</sub>O**: Linear and quadratic models with model selection
+  metric specified by user (RMSE or R<sup>2</sup>). Results from
+  CO<sub>2</sub> modeling can be passed to remove
+  CO<sub>2</sub>-identified deadband from N<sub>2</sub>O models and/or
+  fail N<sub>2</sub>O models if the CO<sub>2</sub> model failed.
+- **Other**: Linear modeling with the option to pass results from
+  CO<sub>2</sub> modeling to remove CO<sub>2</sub>-identified deadband
+  and/or fail if the CO<sub>2</sub> model failed.

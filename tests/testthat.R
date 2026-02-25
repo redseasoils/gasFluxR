@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(MargLabGHG)
+library(gasFluxR)
 
-test_check("MargLabGHG")
+test_check("gasFluxR")

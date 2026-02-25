@@ -1,15 +1,27 @@
 #' Import Chamber Volume Data
 #'
 #' @description Imports and cleans up chamber volume Excel spreadsheets
-#' contained in `dir`.
+#'   contained in `dir`.
 #'
 #' @param dir Directory in which to look for chamber volume files. Defaults to
 #'   `"data/00_raw/chamber_volume"`.
+#' @param file Specific file in `dir` to import. If `NULL` (the default), all
+#'   `.xlsx` files in `dir` will be imported.
+#' @param file_date_formats Character vector of formats of dates to parse from
+#'   `xlsx` file names within `dir`. The default is `%Y%m%d`, which would have a
+#'   path like `[dir]/20250425.xlsx`, with the date parsed as `2025-04-25`. If
+#'   more than one format is specified, parsing will be attempted in the order
+#'   provided. For more information on date parsing abbreviations, see
+#'   ?[strptime].
 #'
 #' @return A data frame of all chamber volume data.
 #' @export
-#'
-import_chamber_volume <- function(dir = 'data/00_raw/chamber_volume', file = NULL) {
+#' @importFrom xfun sans_ext
+import_chamber_volume <- function(
+    dir = 'data/00_raw/chamber_volume',
+    file = NULL,
+    file_date_formats = c("%Y%m%d")
+) {
 
   if (is.null(file)) {
     cat("\n\nLooking for files in ", getwd(), "/", dir, "\n\n", sep = "")
@@ -120,7 +132,8 @@ import_chamber_volume <- function(dir = 'data/00_raw/chamber_volume', file = NUL
   vol <- dplyr::bind_rows(vol_dat, .id = "dir") %>%
     # Add columns for date and site and change class of plot column to factor
     dplyr::mutate(
-      Date = as.Date(stringr::str_sub(dir, -13, -6), "%Y%m%d"),
+      Date = lubridate::as_date(xfun::sans_ext(basename(dir)),
+                                format = file_date_formats),
       site = stringr::str_split_i(dir, "/", -2) %>% factor(),
       plot = factor(plot), .before = "plot"
     ) %>%
