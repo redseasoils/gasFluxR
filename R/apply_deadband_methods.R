@@ -198,6 +198,7 @@ apply_optimum_deadband_method <- function(flux_mod, deadband_opts) {
 # checking the number of remaining observations against min_n
 #' @noRd
 fail_if_obs_lt_min_n <- function(flux_mod) {
+  if (already_failed(flux_mod)) return(flux_mod)
   min_n_fail <- length(flux_mod$ppm_processed) < flux_mod$min_n
   if (min_n_fail) {
     success <- FALSE
@@ -216,6 +217,7 @@ fail_if_obs_lt_min_n <- function(flux_mod) {
 # checking the R2 value against min_R2
 #' @noRd
 fail_if_low_r2 <- function(flux_mod, metrics) {
+  if (already_failed(flux_mod)) return(flux_mod)
   r2_fail <- is.na(metrics$r_squared) || isTRUE(metrics$r_squared < flux_mod$min_R2)
   if (r2_fail) {
     success <- FALSE
@@ -232,9 +234,24 @@ fail_if_low_r2 <- function(flux_mod, metrics) {
 #' successful
 #' @noRd
 fail_if_co2_failed <- function(flux_mod, co2_mod = NULL) {
+  if (already_failed(flux_mod)) return(flux_mod)
   if (isFALSE(co2_mod$success)) {
     flux_mod$success <- FALSE
     flux_mod$reason <- "CO2 model failed"
   }
   return(flux_mod)
+}
+
+
+#' Recover from model failure functions if the model already failed for a
+#' different reason
+#' @noRd
+already_failed <- function(flux_mod, ...) {
+  success <- flux_mod$success
+  reason <- flux_mod$reason
+  if (isFALSE(success) && !is.null(reason)) {
+    return(TRUE)
+  } else {
+    return(FALSE)
+  }
 }
