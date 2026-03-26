@@ -18,7 +18,10 @@ fit_quadratic_model <- function(mod) {
 #' Extract model metrics
 #' @noRd
 get_model_metrics <- function(model) {
-  if (is.null(model)) {
+
+  model_is_invalid <- is.null(model) || length(model$model[[1]]) < 3
+
+  if (model_is_invalid) {
     return(list(
       r_squared = NA_real_,
       adj_r_squared = NA_real_,
