@@ -15,7 +15,13 @@ knitr::opts_chunk$set(
 
 # gasFluxR
 
-gasFluxR provides a basic workflow processing data from Gasmet portable gas analyzers, including support for flux modeling and calculations.
+gasFluxR provides a basic workflow to process raw data from Gasmet portable gas analyzers. The package supports data processing from import through to flux calculations. Features include:
+
+1. Batch import and processing.
+2. Identification and removal of "deadband" (period of measurement before equilibrium is reached) using CO~2~ data and user-specified parameters.
+  + *In development:* Visualization of CO~2~ flux model and removed deadband.
+3. Multiple-model fitting (linear and quadratic) and model selection using user-specified metric (R^2^ or RMSE).
+  + Currently supported for N~2~O data only.
 
 ## Installation
 
@@ -28,12 +34,11 @@ pak::pak("redseasoils/gasFluxR")
 
 ## Getting Started
 
-To calculate gas flux from Gasmet data using the package's functions, you'll need:
+To model gas flux from Gasmet data using the package's functions, you'll need **a TXT file from a Gasmet portable gas analyzer**. To calculate flux values from the model, you'll also need the chamber temperature recorded during the sample, and the chamber height (ratio of chamber volume to area).
 
-  1. A TXT file from a Gasmet portable gas analyzer
-  2. A spreadsheet (.xlsx) containing variable chamber dimensions and variables, including chamber temperature (°C), collar height (cm; if applicable), chamber height (cm), and input and output tube lengths (cm).
+### Data Import
   
-We recommend storing these files in a specific structure so that the package's functions can find many of these files easily and process them in batches. More on that below, but for now, let's focus on getting 
+For batch import, we recommend a specific file storage structure. More on that in [File Storage](#file-storage-for-batch-processing). For now, let's import data for a single Gasmet sample (one TXT file) using [import_gasmet_data()]. 
 
 ```{r import-gasmet-file}
 library(gasFluxR)
@@ -45,13 +50,106 @@ txt_file <- "301 BT.TXT"
 # Import
 gasmet_data <- import_gasmet_data(txt_file_dir, txt_file)
 head(gasmet_data)
-
-# Use an example chamber variables spreadsheet
-chamber_dir <- system.file("data", "00_raw", "chamber_volume", "Site1", 
-                           package = "gasFluxR")
-chamber_file <- "20240830.xlsx"
-chamber <- import_chamber_volume(chamber_dir, chamber_file)
 ```
+
+### Model Gas Flux
+
+To model gas flux (ppm sec^-1^), we'll use [model_gas_flux()]. The function returns a structured list with information about the data, the model, deadband removal (if applicable), model selection (if applicable), and model "success." Model success is determined by inputs to the function, including: 
+
++ `min_n` : the minimum number of observations
++ `min_R2` : the minimum R^2^ value
+
+We'll specify a minimum number of **4 observations** and a minimum R^2^ value of **0.98** for a CO~2~ model. We'll also specify a **fixed** deadband removal method to remove the first **30 seconds** of the measurement.
+
+```{r model-co2-flux}
+flux_mod_CO2 <- model_gas_flux(
+  data = gasmet_data,
+  ppm_var = Carbon.dioxide.CO2,
+  seconds_var = seconds,
+  min_n = 4,
+  min_R2 = 0.98,
+  deadband_opts = list(
+    method = "fixed", # specify fixed deadband removal method
+    fixed = list(seconds = 30) # specify more options for fixed deadband removal
+  )
+)
+flux_mod_CO2
+```
+
+For non-CO~2~ gases, we can use the same [model_gas_flux()] function. If we want to apply the CO~2~–identified deadband to the non-CO~2~ model, we can pass the output from the CO~2~ model.
+
+For an N~2~O model, we will also pass model selection options via the `mod_opts` argument. We will run both linear and quadratic models on the N~2~O sample, and select the final model using RMSE. For model quality control, we will specify a minimum of **4 observations** and a **minimum R^2^ of 0.1**.
+
+```{r model-n2o-flux}
+flux_mod_N2O <- model_gas_flux(
+  data = gasmet_data,
+  ppm_var = Nitrous.oxide.N2O,
+  seconds_var = seconds,
+  co2_mod = flux_mod_CO2,
+  min_n = 4,
+  min_R2 = 0.1,
+  mod_opts = list(
+    models = c("linear", "quadratic"),  # Models to fit
+    selection_metric = "RMSE"  # Metric for best model selection
+  )
+)
+flux_mod_N2O
+```
+
+For NH~3~ and CH~4~ models, we can again pass the CO~2~ model output to remove the CO~2~ identified deadband from the sample before modeling, and set our minimum number of observations and R^2^. We do not need to pass any other species-specific parameters.
+
+```{r model-ch4-flux}
+flux_mod_CH4 <- model_gas_flux(
+  data = gasmet_data,
+  ppm_var = Methane.CH4,
+  seconds_var = seconds,
+  co2_mod = flux_mod_CO2,
+  min_n = 4,
+  min_R2 = 0.1
+)
+flux_mod_CH4
+```
+```{r model-nh3-flux}
+flux_mod_NH3 <- model_gas_flux(
+  data = gasmet_data,
+  ppm_var = Ammonia.NH3,
+  seconds_var = seconds,
+  co2_mod = flux_mod_CO2,
+  min_n = 4,
+  min_R2 = 0.1
+)
+flux_mod_NH3
+```
+
+Note that the NH~3~ flux model fails to meet our quality control parameters, so the output flags `"success"` as `FALSE` and adds a `"reason"` for model failure. Also note that `"models"` and `"metrics"` are both `NULL` as the function does not by default return models and metrics when quality control parameters are not met. To overcome this, we can tell the function to return the model regardless of quality control status via the `force` argument.
+
+```{r model-nh3-flux-force}
+flux_mod_NH3_forced <-  model_gas_flux(
+  data = gasmet_data,
+  ppm_var = Ammonia.NH3,
+  seconds_var = seconds,
+  co2_mod = flux_mod_CO2,
+  min_n = 4,
+  min_R2 = 0.1,
+  force = TRUE
+)
+flux_mod_NH3_forced
+```
+
+When we set `force` to `TRUE`, we will get the model and its metrics in the output, even if the model fails quality control.
+
+<!-- ### Calculate Gas Flux -->
+
+<!-- 2. A spreadsheet (.xlsx) containing variable chamber dimensions and variables, including chamber temperature (°C), collar height (cm; if applicable), chamber height (cm), and input and output tube lengths (cm). -->
+
+<!-- ```{r import-volume} -->
+<!-- # Use an example chamber variables spreadsheet -->
+<!-- chamber_dir <- system.file("data", "00_raw", "chamber_volume", "Site1",  -->
+<!--                            package = "gasFluxR") -->
+<!-- chamber_file <- "20240830.xlsx" -->
+<!-- chamber <- import_chamber_volume(chamber_dir, chamber_file) -->
+<!-- head(chamber) -->
+<!-- ``` -->
 
 ## File Storage for Batch Processing
 
@@ -92,7 +190,7 @@ Below is an example file structure, in which "Gasmet_Data/raw" is the main direc
 │   │   │   │   └── Chamber.xlsx
 ```
 
-With the file structure above, assuming the working directory is the root directory containing the "Data" folder, the import functions would be:
+With the file structure above, assuming the working directory is the root directory containing the `Gasmet_Data` folder, the import functions would be:
 
 ``` {r eval=FALSE}
 # Set option for TXT file directory, then import
