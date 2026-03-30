@@ -1,11 +1,14 @@
 #' Fit linear model
 #' @noRd
 fit_linear_model <- function(flux_mod = NULL, x, y) {
-  if (is.null(flux_mod)) {
-    lm(y ~ x, na.action = na.exclude)
-  } else {
-    lm(flux_mod$ppm_processed ~ flux_mod$seconds_processed, na.action = na.exclude)
+  if (!is.null(flux_mod)) {
+    x <- flux_mod$seconds_processed
+    y <- flux_mod$ppm_processed
   }
+  if (length(x) < 3 || length(y) < 3) {
+    return(NULL)
+  }
+  lm(y ~ x, na.action = na.exclude)
 }
 
 #' Fit quadratic model
